@@ -14,19 +14,42 @@ class EventMessages:
         
         return json_data.encode()
 
+class IpcSocket(socket.socket):
+    def __object_init__(self, socket_obj):
+        super().__init__(fileno=socket_obj.detach())
+        return self
+
+    def accept(self):
+        con, cli = super().accept()
+        return self.__object_init__(con), cli
+
+    def emit(self, event_name, data):
+        message = EventMessages(event_name, data).serialize()
+        
+        self.sendall(message)
+
+    async def on(self, event_name, callback):
+        while self:
+            data = self.recv().decode()
+            
+            if data and data['type'] == event_name:
+                callback()
+        
+
 class Server:
     def __init__(self):
         # Ensure that the file doesn't exist yet (or an error will be raised)
         if os.path.exists(socket_name):
             os.remove(socket_name)
             
-        self.__server_socket = socket.socket( socket.AF_UNIX, socket.SOCK_STREAM )
+        self.__server_socket = IpcSocket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.__server_socket.bind(socket_name)
         self.__server_socket.listen()
         
         connection, addr = self.__server_socket.accept()
 
         print ("Connection from: " + str(addr))
+        
         while True:
             data = connection.recv(1024).decode()
             if not data:
@@ -36,11 +59,7 @@ class Server:
             print ("Received from User: " + str(data))
             data = input("type message: ")
             
-            message = EventMessages('message', data).serialize()
-            
-            print(message)
-            
-            connection.sendall(message)                                        
+            connection.emit('message', data)                                   
         connection.close()     
 
 server = Server()
