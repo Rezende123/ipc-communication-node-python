@@ -1,0 +1,15 @@
+{
+  "name": "communication-node-python",
+  "version": "1.0.0",
+  "description": "",
+  "main": "client.js",
+  "scripts": {
+    "client": "node client.js",
+    "server": "python3 server.py"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-ipc": "^9.1.3"
+  }
+}
