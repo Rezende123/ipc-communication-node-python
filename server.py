@@ -19,12 +19,12 @@ class EventQueue:
     def __init__(self, event_name, callback):
         self.event_name = event_name
         self.callback = callback
-        
 
 class IpcSocket(socket.socket):
+    event_queue = []
+    
     def __object_init__(self, socket_obj):
         super().__init__(fileno=socket_obj.detach())
-        self.event_queue = []
         return self
 
     def accept(self):
@@ -47,22 +47,35 @@ class IpcSocket(socket.socket):
         event = EventQueue(event_name, callback)
         self.event_queue.append(event)
     
-    def listen_client(self, time_limit = None):
+    def listen_client(self, secunds_limit = None):
         timeout = None
+        __data__ = None
         
-        if time_limit is not None:
-            timeout = time.time() + time_limit
+        if secunds_limit is not None:
+            timeout = time.time() + secunds_limit
+
+        self.settimeout(1)
 
         while True:
-            for event in self.event_queue:
+            try:
                 __data__ = self.recv(1024)
+            except:
+                __data__ = None
+
+            if __data__:
                 __data__ = self.format_input_data(__data__)
                 
-                if __data__ and __data__["type"] == event.event_name:
-                    event.callback(__data__["data"])
+                for event in self.event_queue:
+                    if __data__["type"] == event.event_name:
+                        event.callback(__data__["data"])
 
-            if timeout is not None and time.time() > timeout:
-                break
+                __data__ = None
+
+            if timeout and time.time() > timeout:
+                return
+            
+
+        self.settimeout(None)
             
 
 class Server:
