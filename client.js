@@ -8,7 +8,7 @@ ipc.connectTo(
     'fridge',
     socket_name,
     function(){
-        ipc.of.fridge.emit('connect', 'CHEGOU NO NODE')
+        ipc.of.fridge.emit('message', 'CHEGOU NO NODE')
 
         ipc.of.fridge.on(
             'message',  //any event or message type your server listens for

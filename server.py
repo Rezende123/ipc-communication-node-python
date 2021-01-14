@@ -28,13 +28,20 @@ class IpcSocket(socket.socket):
         
         self.sendall(message)
 
-    async def on(self, event_name, callback):
-        while self:
-            data = self.recv().decode()
-            
-            if data and data['type'] == event_name:
-                callback()
+    def format_input_data(self, data):
+        data = data.decode("utf-8")
+        data = data.replace('\f', '')
+        data = json.loads(data)
         
+        return data
+        
+    def on(self, event_name, callback):
+        __data__ = self.recv(1024)
+        __data__ = self.format_input_data(__data__)
+        
+        if __data__ and __data__["type"] == event_name:
+            callback(__data__["data"])
+            
 
 class Server:
     def __init__(self):
@@ -50,16 +57,16 @@ class Server:
 
         print ("Connection from: " + str(addr))
         
-        while True:
-            data = connection.recv(1024).decode()
-            if not data:
-                break
-            print ("from connected  user: " + str(data))                                            
-            data = str(data).upper()
-            print ("Received from User: " + str(data))
-            data = input("type message: ")
-            
-            connection.emit('message', data)                                   
-        connection.close()     
+        connection.on( 'message', self.readMessage )
+        
+    def readMessage(self, data):
+        if data is None:                                 
+            connection.close()
+        print ("from connected  user: " + str(data))                                            
+        data = str(data).upper()
+        print ("Received from User: " + str(data))
+        data = input("type message: ")
+        
+        connection.emit('message', data)
 
 server = Server()
