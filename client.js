@@ -14,6 +14,7 @@ ipc.connectTo(
             'message',  //any event or message type your server listens for
             function(data){
                 console.log('Mensagem: ', data);
+                ipc.of.fridge.emit('code', 'BBMP')
             }
         );
     }
