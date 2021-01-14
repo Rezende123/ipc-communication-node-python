@@ -53,20 +53,23 @@ class Server:
         self.__server_socket.bind(socket_name)
         self.__server_socket.listen()
         
-        connection, addr = self.__server_socket.accept()
+        self.connection, addr = self.__server_socket.accept()
 
         print ("Connection from: " + str(addr))
         
-        connection.on( 'message', self.readMessage )
+        self.connection.on( 'message', self.readMessage )
+        
+        print("Waiting...")
         
     def readMessage(self, data):
-        if data is None:                                 
-            connection.close()
+        if data is None:                     
+            self.connection.close()
         print ("from connected  user: " + str(data))                                            
         data = str(data).upper()
         print ("Received from User: " + str(data))
         data = input("type message: ")
         
-        connection.emit('message', data)
+        self.connection.emit('message', data)                     
+        self.connection.close()
 
 server = Server()
